@@ -81,7 +81,7 @@ class PartySocketImpl implements PartySocket {
       reconnectionDelay: 1000,
       reconnectionDelayMax: 8000,
       timeout: 15000,
-      transports: ['websocket', 'polling'],
+      transports: ['polling'],
       auth: { token },
     });
 

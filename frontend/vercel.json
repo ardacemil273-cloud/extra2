@@ -3,6 +3,7 @@
     { "source": "/api/:path*", "destination": "https://extra2-production.up.railway.app/api/:path*" },
     { "source": "/share/:path*", "destination": "https://extra2-production.up.railway.app/share/:path*" },
     { "source": "/socket.io/:path*", "destination": "https://extra2-production.up.railway.app/socket.io/:path*" },
+    { "source": "/socket.io", "destination": "https://extra2-production.up.railway.app/socket.io" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
