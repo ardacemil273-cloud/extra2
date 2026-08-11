@@ -45,8 +45,12 @@ export function createApp(): express.Express {
   app.use('/api/me', uploadRoutes);
   app.use(shareRoutes);
 
-  const frontendDist = path.resolve(process.cwd(), '..', 'frontend', 'dist');
-  if (fs.existsSync(frontendDist)) {
+  const distCandidates = [
+    path.resolve(process.cwd(), '..', 'frontend', 'dist'),
+    path.resolve(process.cwd(), 'frontend', 'dist'),
+  ];
+  const frontendDist = distCandidates.find((dir) => fs.existsSync(dir));
+  if (frontendDist) {
     app.use(express.static(frontendDist));
     app.get(/^\/(?!api\/|share\/|uploads\/|socket\.io).*/, (_req, res) => {
       res.sendFile(path.join(frontendDist, 'index.html'));
