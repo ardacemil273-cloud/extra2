@@ -75,6 +75,7 @@ class PartySocketImpl implements PartySocket {
       this.socket.removeAllListeners();
     }
     this.socket = io({
+      path: '/socket.io',
       autoConnect: true,
       reconnection: true,
       reconnectionAttempts: Infinity,
