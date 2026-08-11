@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: partyverse
+      POSTGRES_PASSWORD: partyverse_dev_pw
+      POSTGRES_DB: partyverse
+    ports:
+      - "5432:5432"
+    volumes:
+      - partyverse_pgdata:/var/lib/postgresql/data
+
+volumes:
+  partyverse_pgdata:

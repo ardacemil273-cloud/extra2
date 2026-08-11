@@ -1,0 +1,10 @@
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN     "bio" TEXT NOT NULL DEFAULT '',
+ADD COLUMN     "interests" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN     "invitedBy" TEXT,
+ADD COLUMN     "invitesAccepted" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "seasonXp" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "title" TEXT NOT NULL DEFAULT '';
+
+-- AlterTable
+ALTER TABLE "rooms" ADD COLUMN     "vibe" TEXT NOT NULL DEFAULT 'mixed';

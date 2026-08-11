@@ -1,0 +1,247 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  email         String    @unique
+  passwordHash  String
+  avatarColor   String    @default("#7c3aed")
+  avatarUrl     String?
+  title         String    @default("")
+  bio           String    @default("")
+  interests     String[]  @default([])
+  unlockedTitles String[] @default([])
+  referralCode  String?   @unique
+  seasonXp      Int       @default(0)
+  invitedBy     String?
+  invitesAccepted Int     @default(0)
+  referralRewardedAt DateTime?
+  xp            Int       @default(0)
+  level         Int       @default(1)
+  dailyStreak   Int       @default(0)
+  lastDailyAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  players           Player[]
+  friendOf          Friend[]            @relation("friendOf")
+  friendTo          Friend[]            @relation("friendTo")
+  achievements      UserAchievement[]
+  gameResults       GameResult[]
+  chatMessages      ChatMessage[]
+  reactions         Reaction[]
+  dailyProgress     UserDailyProgress[]
+
+  @@map("users")
+}
+
+model Friend {
+  id        String   @id @default(cuid())
+  userId    String
+  friendId  String
+  status    String   @default("pending") // pending | accepted
+  createdAt DateTime @default(now())
+
+  user   User @relation("friendOf", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("friendTo", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+  @@map("friends")
+}
+
+model Room {
+  id           String   @id @default(cuid())
+  code         String   @unique
+  name         String
+  ownerId      String
+  status       String   @default("lobby") // lobby | playing | finished | closed
+  gameType     String? // quiz | reaction | rps | draw | telephone | sabotaj | chameleon | reveal | null
+  vibe         String   @default("mixed") // friends | spice | chaos | mixed
+  isPrivate    Boolean  @default(false)
+  passwordHash String?
+  inviteToken  String?  @unique
+  maxPlayers   Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  closedAt     DateTime?
+
+  players       Player[]
+  gameHistory   GameHistory[]
+  chatMessages  ChatMessage[]
+  reactions     Reaction[]
+
+  @@index([ownerId])
+  @@map("rooms")
+}
+
+model Player {
+  id        String   @id @default(cuid())
+  userId    String
+  roomId    String
+  isReady   Boolean  @default(false)
+  joinedAt  DateTime @default(now())
+  score     Int      @default(0)
+  spectator Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roomId])
+  @@index([roomId])
+  @@map("players")
+}
+
+model GameHistory {
+  id       String   @id @default(cuid())
+  roomId   String
+  roomName String
+  gameType String
+  stats    Json? // per-game funny stats for awards
+  awards   Json? // generated funny award titles
+  playedAt DateTime @default(now())
+
+  room    Room         @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  results GameResult[]
+
+  @@index([roomId])
+  @@map("game_history")
+}
+
+model GameResult {
+  id            String @id @default(cuid())
+  gameHistoryId String
+  userId        String
+  score         Int
+  placed        Int
+
+  gameHistory GameHistory @relation(fields: [gameHistoryId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([gameHistoryId])
+  @@map("game_results")
+}
+
+model Achievement {
+  id          String           @id @default(cuid())
+  key         String           @unique
+  name        String
+  description String
+  icon        String
+  xpReward    Int
+  users       UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  achievementId String
+  earnedAt      DateTime    @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model DailyChallenge {
+  id          String              @id @default(cuid())
+  day         DateTime
+  key         String // e.g. "play_games" | "win_games"
+  target      Int
+  description String
+  xpReward    Int
+  users       UserDailyProgress[]
+
+  @@unique([day, key])
+  @@map("daily_challenges")
+}
+
+model UserDailyProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  challengeId String
+  progress    Int      @default(0)
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge DailyChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId])
+  @@map("user_daily_progress")
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  roomId    String
+  userId    String
+  text      String
+  createdAt DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+  @@map("chat_messages")
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  roomId    String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+  @@map("reactions")
+}
+
+model SiteConfig {
+  key   String @id
+  value Json?
+
+  @@map("site_config")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String // friend_request | friend_accepted | room_invite | achievement
+  actorId   String?
+  payload   Json?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+model Report {
+  id           String   @id @default(cuid())
+  reporterId   String
+  targetUserId String
+  roomId       String?
+  reason       String
+  details      Json?
+  status       String   @default("open") // open | reviewed | dismissed
+  createdAt    DateTime @default(now())
+
+  @@index([targetUserId, status])
+  @@index([createdAt])
+  @@map("reports")
+}
